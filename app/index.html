@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SideTrip — your life, called to you</title>
+<meta name="description" content="SideTrip watches your calendar, bills, lists and location — and calls or texts you with the plan, instead of a notification you'll miss.">
+<meta name="theme-color" content="#115e59">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SideTrip">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="appbar">
+  <h1>SideTrip <span>— your life, called to you</span></h1>
+  <p>Calls &amp; texts with the plan. Never just a notification.</p>
+</header>
+
+<main>
+  <!-- TODAY / PLANS -->
+  <section class="view active" id="view-today">
+    <div class="notice"><b>How this works:</b> SideTrip watches your calendar, bills, lists, messages and location — then <b>calls or texts</b> you with the plan. The watching and calling run on the server (a phone app can't watch in the background, especially on iPhone). This app is your dashboard: plans, list, scripts, and setup.</div>
+    <h2 style="margin:4px 0 10px;font-size:18px;color:#134e4a">Today — Thu Nov 12</h2>
+    <div id="plans"></div>
+    <div class="card" id="script-preview">
+      <h2>🎙️ Hear the call</h2>
+      <p class="muted">Tap <b>“Hear the call”</b> on any plan above to see — and hear — the exact script Brooke will say when she calls you.</p>
+    </div>
+  </section>
+
+  <!-- SHARED LIST -->
+  <section class="view" id="view-list">
+    <div class="card">
+      <h2>🛒 Shared list — Sean · Aimee · Echo</h2>
+      <p class="muted">One list for the whole household. Anyone can add; SideTrip calls you with it when you're near the store.</p>
+      <p class="muted" id="list-count"></p>
+      <ul class="clean" id="family-list"></ul>
+      <form id="add-item-form" class="addrow">
+        <input id="new-item-name" type="text" placeholder="Add an item…" autocomplete="off" required>
+        <input id="new-item-store" type="text" placeholder="Store" autocomplete="off" style="max-width:110px">
+        <button class="btn" type="submit">Add</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>📍 How location calls work</h2>
+      <p class="muted">When you're near a store that has open items on this list, SideTrip calls you with just those items — so the microwave and the floor mats don't wait for a special trip.</p>
+    </div>
+  </section>
+
+  <!-- CALL LOG -->
+  <section class="view" id="view-calls">
+    <div class="card">
+      <h2>📞 Call log</h2>
+      <p class="muted">Every call and text SideTrip makes, with what it said.</p>
+      <div id="call-log"></div>
+    </div>
+  </section>
+
+  <!-- SETUP -->
+  <section class="view" id="view-setup">
+    <div class="card">
+      <h2>⚙️ Setup — 3 steps, done in 2 minutes</h2>
+      <p class="muted">No Vapi signup. No API keys. No separate accounts. Calling is built in and invisible.</p>
+      <ol class="steps" id="setup-steps"></ol>
+    </div>
+    <div class="card">
+      <h2>📏 Call rules</h2>
+      <ul class="rules muted">
+        <li>📞 <b>Calls or texts only</b> — never app notifications. Notifications get missed; a call doesn't.</li>
+        <li>⏱️ <b>Short calls</b> — the plan in under a minute, then done.</li>
+        <li>⭐ <b>Important matters only</b> — appointments, deadlines, bills, nearby errands. No noise.</li>
+        <li>🤫 <b>Never while you're already chatting with Echo.</b></li>
+        <li>🛑 You can pause calls any time from this screen.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>💵 Pricing</h2>
+      <p class="muted"><b>$2.99/month</b> — calls included. Or bring your own Vapi account instead (new Vapi signups get $10 free credit, roughly 150–200 minutes). Name, list home, and pricing are still open decisions — this build uses these defaults and they can change.</p>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="view" id="view-settings">
+    <div class="card">
+      <h2>🔑 Calling settings</h2>
+      <p class="muted">SideTrip calls through Vapi (voice AI). Your key is stored <b>only on this device</b> — it is never sent to the repo or anyone else. Leave the key blank to stay in dry-run mode: the app builds the exact call request and shows it, without sending a real call.</p>
+      <form id="settings-form">
+        <label for="set-phone">Your phone (calls go here)</label>
+        <input id="set-phone" type="tel" placeholder="+14054718024">
+        <label for="set-assistant">Vapi assistant id</label>
+        <input id="set-assistant" type="text" placeholder="2a6b6f6d-a840-4c31-b555-f81c12bf66d4">
+        <p class="muted small">Default is Brooke, the family voice assistant.</p>
+        <label for="set-key">Vapi API key (VAPI_API_KEY)</label>
+        <input id="set-key" type="password" placeholder="Paste your key here — stored on-device only" autocomplete="off">
+        <label for="set-pricing">Pricing model</label>
+        <select id="set-pricing">
+          <option value="subscription">$2.99/mo — calls included</option>
+          <option value="byo-vapi">Bring your own Vapi account</option>
+        </select>
+        <p style="margin:12px 0 4px"><label style="display:flex;gap:8px;align-items:center;font-weight:400"><input id="set-dryrun" type="checkbox" style="width:auto"> Dry-run mode — build the call, don't send it</label></p>
+        <button class="btn block" type="submit">Save settings</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>🖥️ The server-side watcher</h2>
+      <p class="muted">True background watching + calling can't run inside this web app (iOS suspends web apps; Android throttles them). The watcher runs server-side — the SideTrip MCP server / hosted service — and this app is its dashboard. The trigger engine in <code>app.js</code> (<code>evaluateTriggers</code> / <code>buildPlan</code> / <code>placeCall</code>) is the same logic the server runs.</p>
+      <p class="muted small">Call-log webhook (already live, do not rebuild): vapi-call-log-slander98-8432s-projects.vercel.app</p>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast" role="status"></div>
+
+<nav class="tabs" aria-label="Sections">
+  <button class="active" data-tab="today"><span class="ico">📋</span>Today</button>
+  <button data-tab="list"><span class="ico">🛒</span>List</button>
+  <button data-tab="calls"><span class="ico">📞</span>Calls</button>
+  <button data-tab="setup"><span class="ico">⚙️</span>Setup</button>
+  <button data-tab="settings"><span class="ico">🔑</span>Settings</button>
+</nav>
+
+<script src="app.js"></script>
+</body>
+</html>
