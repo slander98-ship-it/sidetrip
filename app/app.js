@@ -32,6 +32,17 @@ const DEFAULTS = {
 };
 const VAPI_API_BASE = "https://api.vapi.ai";
 
+/* ---------------- Shared list — Google Sheets (via Apps Script bridge) --- */
+/* The family list lives in a Google Sheet so everyone shares one list.
+   The Apps Script web app is the bridge (no sign-in needed):
+   GET  -> {"items":[{id, name, store, addedBy, done}, ...]}
+   POST {"action":"add","name","store","addedBy"}    -> {"ok":true,"id"}
+   POST {"action":"toggle","id","done"}               -> {"ok":true}
+   Writes use Content-Type: text/plain to avoid a CORS preflight.
+   localStorage stays as the offline fallback — if the sheet is
+   unreachable the app keeps working with the last synced list. */
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbw2KHfJQAGoFtjzm_nMbkgaATJv8POjCC-lH8jr1F-GD6g7FZPqH_rBQDcgFLE9vX5c/exec";
+
 /* ---------------- Seed data (today: Thu Nov 12, 2026) -------------------- */
 const SEED_TRIGGERS = [
   {
@@ -208,6 +219,39 @@ function saveSettings(patch) {
   return next;
 }
 
+/* ---------------- Sheet sync ---------------------------------------------- */
+async function sheetFetch() {
+  try {
+    const res = await fetch(SHEET_API_URL);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return Array.isArray(data.items) ? data.items : null;
+  } catch (e) { return null; }
+}
+
+async function sheetPost(body) {
+  try {
+    const res = await fetch(SHEET_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) return null;
+    return await res.json().catch(() => null);
+  } catch (e) { return null; }
+}
+
+/** Pull the list from the sheet; if it comes back, it replaces the local list. */
+async function syncListFromSheet() {
+  const items = await sheetFetch();
+  if (items) {
+    listItems = items;
+    store.set("list", listItems);
+    renderList();
+  }
+  return items;
+}
+
 /* ---------------- Rendering ----------------------------------------------- */
 const $ = (sel) => document.querySelector(sel);
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -316,6 +360,8 @@ document.addEventListener("click", (e) => {
     listItems = listItems.map((it) => it.id === id ? Object.assign({}, it, { done: !it.done }) : it);
     store.set("list", listItems);
     renderList();
+    const toggled = listItems.find((it) => it.id === id);
+    if (toggled) sheetPost({ action: "toggle", id, done: toggled.done });
     return;
   }
   const setupBtn = e.target.closest("[data-setup]");
@@ -378,6 +424,8 @@ document.addEventListener("submit", (e) => {
     e.target.reset();
     renderList();
     toast("Added to the family list ✓");
+    // Sync to the sheet; re-fetch so the item picks up the sheet's canonical ID.
+    sheetPost({ action: "add", name, store: storeName, addedBy: "Sean" }).then(() => syncListFromSheet());
   }
   if (e.target.id === "settings-form") {
     e.preventDefault();
@@ -398,6 +446,7 @@ renderList();
 renderLog();
 renderSetup();
 renderSettings();
+syncListFromSheet(); // load the shared list from Google Sheets (localStorage stays as offline fallback)
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./sw.js").then(
